@@ -17,12 +17,14 @@ type TrialBalanceEntry = {
   reference: string
   debit: number
   credit: number
+  date: string
 }
 
 type LedgerEntry = {
   accountNumber: string
   accountName: string
   entries: {
+    date: string
     reference: string
     description: string
     debit: number
@@ -34,12 +36,12 @@ type LedgerEntry = {
 export default function TrialBalanceConverter() {
   // State for trial balance entries
   const [trialBalanceEntries, setTrialBalanceEntries] = useState<TrialBalanceEntry[]>([
-    { id: "1", accountNumber: "1000", accountName: "Cash", reference: "GL1", debit: 5000, credit: 0 },
-    { id: "2", accountNumber: "1200", accountName: "Accounts Receivable", reference: "GL2", debit: 3000, credit: 0 },
-    { id: "3", accountNumber: "1300", accountName: "Inventory", reference: "GL3", debit: 7000, credit: 0 },
-    { id: "4", accountNumber: "2000", accountName: "Accounts Payable", reference: "GL4", debit: 0, credit: 2500 },
-    { id: "5", accountNumber: "2100", accountName: "Notes Payable", reference: "GL5", debit: 0, credit: 5000 },
-    { id: "6", accountNumber: "3000", accountName: "Capital", reference: "GL6", debit: 0, credit: 7500 },
+    { id: "1", date: "2025-12-31", accountNumber: "1000", accountName: "Cash", reference: "GL1", debit: 5000, credit: 0 },
+    { id: "2", date: "2025-12-31", accountNumber: "1200", accountName: "Accounts Receivable", reference: "GL2", debit: 3000, credit: 0 },
+    { id: "3", date: "2025-12-31", accountNumber: "1300", accountName: "Inventory", reference: "GL3", debit: 7000, credit: 0 },
+    { id: "4", date: "2025-12-31", accountNumber: "2000", accountName: "Accounts Payable", reference: "GL4", debit: 0, credit: 2500 },
+    { id: "5", date: "2025-12-31", accountNumber: "2100", accountName: "Notes Payable", reference: "GL5", debit: 0, credit: 5000 },
+    { id: "6", date: "2025-12-31", accountNumber: "3000", accountName: "Capital", reference: "GL6", debit: 0, credit: 7500 },
   ])
 
   // Function to add a new empty entry
@@ -47,7 +49,7 @@ export default function TrialBalanceConverter() {
     const newId = (trialBalanceEntries.length + 1).toString()
     setTrialBalanceEntries([
       ...trialBalanceEntries,
-      { id: newId, accountNumber: "", accountName: "", reference: "", debit: 0, credit: 0 },
+      { id: newId, date: "", accountNumber: "", accountName: "", reference: "", debit: 0, credit: 0 },
     ])
   }
 
@@ -76,6 +78,7 @@ export default function TrialBalanceConverter() {
         accountName: entry.accountName,
         entries: [
           {
+            date: entry.date,
             reference: entry.reference,
             description: "Opening Balance",
             debit: isDebit ? amount : 0,
@@ -169,6 +172,7 @@ export default function TrialBalanceConverter() {
                   <Table>
                     <TableHeader>
                       <TableRow>
+                        <TableHead className="w-[15%]">Date</TableHead>
                         <TableHead className="w-[15%]">Account Number</TableHead>
                         <TableHead className="w-[30%]">Account Name</TableHead>
                         <TableHead className="w-[15%]">Reference</TableHead>
@@ -180,6 +184,13 @@ export default function TrialBalanceConverter() {
                     <TableBody>
                       {trialBalanceEntries.map((entry) => (
                         <TableRow key={entry.id}>
+                          <TableCell>
+                            <Input
+                              value={entry.date}
+                              onChange={(e) => updateEntry(entry.id, "date", e.target.value)}
+                              placeholder="Date"
+                            />
+                          </TableCell>
                           <TableCell>
                             <Input
                               value={entry.accountNumber}
@@ -279,6 +290,7 @@ export default function TrialBalanceConverter() {
                       <Table>
                         <TableHeader>
                           <TableRow>
+                            <TableHead>Date</TableHead>
                             <TableHead>Reference</TableHead>
                             <TableHead>Description</TableHead>
                             <TableHead>Debit</TableHead>
@@ -289,6 +301,7 @@ export default function TrialBalanceConverter() {
                         <TableBody>
                           {ledger.entries.map((entry, entryIndex) => (
                             <TableRow key={entryIndex}>
+                              <TableCell>{entry.date}</TableCell>
                               <TableCell>{entry.reference}</TableCell>
                               <TableCell>{entry.description}</TableCell>
                               <TableCell>{entry.debit > 0 ? entry.debit : ""}</TableCell>
