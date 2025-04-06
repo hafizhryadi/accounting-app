@@ -20,6 +20,15 @@ type TrialBalanceEntry = {
   date: string
 }
 
+type LedgerEntryItem = {
+  date: string
+  reference: string
+  description: string
+  debit: number
+  credit: number
+  balance: number
+}
+
 type LedgerEntry = {
   accountNumber: string
   accountName: string
@@ -42,6 +51,8 @@ export default function TrialBalanceConverter() {
     { id: "4", date: "2025-12-31", accountNumber: "2000", accountName: "Accounts Payable", reference: "GL4", debit: 0, credit: 2500 },
     { id: "5", date: "2025-12-31", accountNumber: "2100", accountName: "Notes Payable", reference: "GL5", debit: 0, credit: 5000 },
     { id: "6", date: "2025-12-31", accountNumber: "3000", accountName: "Capital", reference: "GL6", debit: 0, credit: 7500 },
+    { id: "7", date: "2025-12-31", accountNumber: "1000", accountName: "Cash", reference: "GL6", debit: 5000, credit: 0 },
+    { id: "8", date: "2025-12-31", accountNumber: "1200", accountName: "Accounts Receivable", reference: "GL6", debit: 0, credit: 5000 },
   ])
 
   // Function to add a new empty entry
@@ -69,25 +80,51 @@ export default function TrialBalanceConverter() {
 
   // Convert trial balance to ledger
   const convertToLedger = (): LedgerEntry[] => {
-    return trialBalanceEntries.map((entry) => {
-      const isDebit = entry.debit > 0
-      const amount = isDebit ? entry.debit : entry.credit
+    const groupedEntries: {[key: string]: TrialBalanceEntry[] } = {}
 
-      return {
-        accountNumber: entry.accountNumber,
-        accountName: entry.accountName,
-        entries: [
-          {
-            date: entry.date,
-            reference: entry.reference,
-            description: "Opening Balance",
-            debit: isDebit ? amount : 0,
-            credit: isDebit ? 0 : amount,
-            balance: isDebit ? amount : -amount,
-          },
-        ],
+    trialBalanceEntries.forEach((entry) => {
+      if (!entry.accountNumber) {
+        return
       }
+
+      if (!groupedEntries[entry.accountNumber]) {
+        groupedEntries[entry.accountNumber] = []
+      }
+
+      groupedEntries[entry.accountNumber].push(entry)
     })
+
+    return Object.keys(groupedEntries).map((accountNumber) => {
+      const entries = groupedEntries[accountNumber]
+      const accountName = entries[0].accountName
+
+      let runningBalance = 0
+      const ledgerItems: LedgerEntryItem[] = entries.map((entry) => {
+        const isDebit = entry.debit > 0
+        const amount = isDebit ? entry.debit : entry.credit
+
+        if (isDebit) {
+          runningBalance += amount
+        } else {
+          runningBalance -= amount
+        }
+
+        return {
+          date: entry.date,
+          reference: entry.reference,
+          description: entry.accountName,
+          debit: isDebit ? amount : 0,
+          credit: isDebit ? 0 : amount,
+          balance: runningBalance,
+        }
+      })
+      
+      return {
+        accountNumber,
+        accountName,
+        entries: ledgerItems,
+      }
+    }).sort((a,b) => a.accountNumber.localeCompare(b.accountNumber))
   }
 
   // Generate ledger data
